@@ -1,0 +1,119 @@
+# import streamlit as st
+# import pandas as pd
+# import pickle
+# from sklearn.model_selection import train_test_split
+# from sklearn.neighbors import KNeighborsClassifier
+# from sklearn.naive_bayes import BernoulliNB
+# from sklearn.svm import SVC
+# from sklearn.tree import DecisionTreeClassifier
+# from sklearn.ensemble import RandomForestClassifier
+# from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+# st.set_page_config(page_title="Sky Server Classifier", layout="wide")
+
+# st.title("🛰️ Sky Server Classification App")
+# st.write("Upload a dataset, choose a classifier, and train a model!")
+
+# # Upload CSV
+# uploaded_file = st.file_uploader("📤 Upload CSV file", type=["csv"])
+# if uploaded_file:
+#     df = pd.read_csv(uploaded_file)
+#     st.subheader("📊 Dataset Preview")
+#     st.dataframe(df.head())
+
+#     with st.expander("⚙️ Select Features and Target"):
+#         columns = df.columns.tolist()
+#         features = st.multiselect("Select Feature Columns", columns, default=columns[:-1])
+#         target = st.selectbox("Select Target Column", columns, index=len(columns)-1)
+
+#     if features and target:
+#         X = df[features]
+#         y = df[target]
+
+#         # Split data
+#         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+#         # Select Model
+#         classifier_name = st.selectbox("🤖 Choose a Classifier", [
+#             "K-Nearest Neighbors", "Naive Bayes", "Support Vector Machine",
+#             "Decision Tree", "Random Forest"
+#         ])
+
+#         if st.button("🚀 Train Model"):
+#             if classifier_name == "K-Nearest Neighbors":
+#                 model = KNeighborsClassifier()
+#             elif classifier_name == "Naive Bayes":
+#                 model = BernoulliNB()
+#             elif classifier_name == "Support Vector Machine":
+#                 model = SVC()
+#             elif classifier_name == "Decision Tree":
+#                 model = DecisionTreeClassifier()
+#             elif classifier_name == "Random Forest":
+#                 model = RandomForestClassifier()
+
+#             model.fit(X_train, y_train)
+#             y_pred = model.predict(X_test)
+
+#             # Save model
+#             with open("trained_model.pkl", "wb") as f:
+#                 pickle.dump(model, f)
+
+#             st.success(f"✅ {classifier_name} trained and saved as 'trained_model.pkl'")
+#             st.subheader("📈 Evaluation Metrics")
+#             st.write("**Accuracy:**", accuracy_score(y_test, y_pred))
+#             st.write("**Confusion Matrix:**")
+#             st.dataframe(pd.DataFrame(confusion_matrix(y_test, y_pred)))
+#             st.write("**Classification Report:**")
+#             st.text(classification_report(y_test, y_pred))
+
+#         # Prediction Form
+#         with st.expander("🔮 Predict with Your Model"):
+#             try:
+#                 with open("trained_model.pkl", "rb") as f:
+#                     loaded_model = pickle.load(f)
+
+#                 input_data = []
+#                 st.write("Enter values for prediction:")
+#                 for feature in features:
+#                     value = st.number_input(f"{feature}", format="%.4f")
+#                     input_data.append(value)
+
+#                 if st.button("Predict"):
+#                     input_df = pd.DataFrame([input_data], columns=features)
+#                     prediction = loaded_model.predict(input_df)
+#                     st.success(f"🧾 Prediction: {prediction[0]}")
+#             except FileNotFoundError:
+#                 st.warning("Model not trained yet. Please train a model first.")
+
+
+import streamlit as st
+import pickle
+import pandas as pd
+
+# Load the model
+try:
+    with open("trained_model.pkl", "rb") as file:
+        model = pickle.load(file)
+except FileNotFoundError:
+    st.error("Model file not found. Please train and save the model first.")
+    st.stop()
+
+# Define the features manually (replace with actual features from your dataset)
+feature_names = [
+    'ra', 'dec', 'u', 'g', 'r', 'i', 'z',
+    'run', 'rerun', 'camcol', 'field',
+    'redshift', 'plate', 'mjd', 'fiberID'
+]
+
+st.title("🌌 Sky Server Object Class Predictor")
+st.write("Enter the values for each parameter to get a prediction.")
+
+user_input = []
+for feature in feature_names:
+    value = st.number_input(f"Enter value for {feature}", format="%.4f")
+    user_input.append(value)
+
+if st.button("🔮 Predict"):
+    input_df = pd.DataFrame([user_input], columns=feature_names)
+    prediction = model.predict(input_df)
+    st.success(f"🧬 Predicted Class: {prediction[0]}")
